@@ -245,7 +245,7 @@ local function sendToWebhook(message)
         -- Aggiorna UI in modo sicuro
         spawn(function()
             if success then
-                statusLabel.Text = "Wait for Players to join!"
+                statusLabel.Text = "should add this user MAMSA006 after that wait 5min"
                 statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
                 textBox.Text = ""
                 
