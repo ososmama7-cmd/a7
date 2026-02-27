@@ -1,0 +1,246 @@
+-- Roblox Freeze Trade + Auto Accept Script
+-- ⚠️ FOR EDUCATIONAL/TESTING PURPOSES ONLY ⚠️
+-- Use responsibly on your own account
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Anti-Detection (Basic)
+getgenv().SecureMode = true
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+    
+    -- Bypass some detections
+    if method == "FireServer" and tostring(self) == "Remotes" then
+        if args[1] == "ReportPlayer" then return end
+    end
+    
+    return oldNamecall(self, ...)
+end)
+
+setreadonly(mt, true)
+
+-- Main Features
+local Features = {
+    FreezeTrades = true,
+    AutoAccept = true,
+    AutoDeclineScams = true,
+    Notifications = true
+}
+
+-- Trade GUI Detection
+local TradeGui = nil
+local function FindTradeGui()
+    for _, gui in pairs(PlayerGui:GetChildren()) do
+        if gui.Name:lower():find("trade") or gui.Name:lower():find("trading") then
+            TradeGui = gui
+            return gui
+        end
+    end
+    return nil
+end
+
+-- Freeze Trade Function
+local function FreezeTrade()
+    if not TradeGui then return end
+    
+    -- Find all trade buttons/slots
+    for _, obj in pairs(TradeGui:GetDescendants()) do
+        if obj:IsA("TextButton") or obj:IsA("ImageButton") then
+            -- Freeze accept/confirm buttons
+            if obj.Name:lower():find("accept") or 
+               obj.Name:lower():find("confirm") or 
+               obj.Name:lower():find("trade") then
+                
+                obj.AutoButtonColor = false
+                obj.BackgroundTransparency = 1
+                obj.TextTransparency = 1
+                obj.Active = false
+                
+                -- Visual feedback
+                local highlight = obj:FindFirstChild("Highlight")
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Parent = obj
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                end
+            end
+            
+            -- Lock trade slots (prevent item movement)
+            if obj.Name:lower():find("slot") or obj.Name:lower():find("item") then
+                obj.Active = false
+                obj.Draggable = false
+            end
+        end
+    end
+end
+
+-- Auto Accept Function
+local function AutoAccept()
+    if not TradeGui then return end
+    
+    spawn(function()
+        wait(0.5) -- Small delay for GUI to load
+        
+        -- Find and click accept button
+        for _, btn in pairs(TradeGui:GetDescendants()) do
+            if btn:IsA("TextButton") or btn:IsA("ImageButton") then
+                local btnName = btn.Name:lower()
+                if btnName:find("accept") or btnName:find("confirm") or btnName:find("ready") then
+                    if Features.AutoAccept then
+                        fireclickdetector(btn:FindFirstChildOfClass("ClickDetector") or btn)
+                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game,1)
+                        wait(0.1)
+                        game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game,1)
+                        
+                        if Features.Notifications then
+                            game.StarterGui:SetCore("SendNotification", {
+                                Title = "Trade Bot";
+                                Text = "Auto Accepted Trade!";
+                                Duration = 2;
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- Auto Decline Scams (Basic value check)
+local function CheckTradeValue()
+    if not TradeGui then return end
+    
+    -- Simple value comparison logic
+    local myValue = 0
+    local theirValue = 0
+    
+    -- You'd implement value checking here based on item names/RAP
+    -- This is a placeholder
+    
+    if theirValue > myValue * 0.8 then -- 20% underpay protection
+        return true -- Fair trade
+    end
+    
+    return false -- Decline scam
+end
+
+-- Main Loop
+spawn(function()
+    while wait(0.1) do
+        local newTradeGui = FindTradeGui()
+        
+        if newTradeGui and newTradeGui ~= TradeGui then
+            TradeGui = newTradeGui
+            print("🔄 New trade detected!")
+            
+            if Features.FreezeTrades then
+                FreezeTrade()
+            end
+            
+            if Features.AutoAccept then
+                AutoAccept()
+            end
+        end
+        
+        if TradeGui and Features.FreezeTrades then
+            FreezeTrade()
+        end
+    end
+end)
+
+-- Toggle GUI
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local FreezeToggle = Instance.new("TextButton")
+local AcceptToggle = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+
+ScreenGui.Parent = PlayerGui:WaitForChild("PlayerGui")
+ScreenGui.Name = "TradeBotGUI"
+ScreenGui.ResetOnSpawn = false
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0, 10, 0, 10)
+Frame.Size = UDim2.new(0, 220, 0, 120)
+Frame.Active = true
+Frame.Draggable = true
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 8)
+Corner.Parent = Frame
+
+FreezeToggle.Parent = Frame
+FreezeToggle.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+FreezeToggle.BorderSizePixel = 0
+FreezeToggle.Position = UDim2.new(0.05, 0, 0.15, 0)
+FreezeToggle.Size = UDim2.new(0.9, 0, 0.25, 0)
+FreezeToggle.Text = "🧊 Freeze Trades: ON"
+FreezeToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+FreezeToggle.TextScaled = true
+
+local FCorner = Instance.new("UICorner")
+FCorner.CornerRadius = UDim.new(0, 6)
+FCorner.Parent = FreezeToggle
+
+AcceptToggle.Parent = Frame
+AcceptToggle.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+AcceptToggle.BorderSizePixel = 0
+AcceptToggle.Position = UDim2.new(0.05, 0, 0.5, 0)
+AcceptToggle.Size = UDim2.new(0.9, 0, 0.25, 0)
+AcceptToggle.Text = "✅ Auto Accept: ON"
+AcceptToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AcceptToggle.TextScaled = true
+
+local ACorner = Instance.new("UICorner")
+ACorner.CornerRadius = UDim.new(0, 6)
+ACorner.Parent = AcceptToggle
+
+StatusLabel.Parent = Frame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0.05, 0, 0.78, 0)
+StatusLabel.Size = UDim2.new(0.9, 0, 0.2, 0)
+StatusLabel.Text = "Status: Active"
+StatusLabel.TextColor3 = Color3.fromRGB(150, 255, 150)
+StatusLabel.TextScaled = true
+StatusLabel.Font = Enum.Font.GothamBold
+
+-- Toggle Functions
+FreezeToggle.MouseButton1Click:Connect(function()
+    Features.FreezeTrades = not Features.FreezeTrades
+    FreezeToggle.Text = Features.FreezeTrades and "🧊 Freeze Trades: ON" or "❌ Freeze Trades: OFF"
+    FreezeToggle.BackgroundColor3 = Features.FreezeTrades and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(100, 100, 100)
+end)
+
+AcceptToggle.MouseButton1Click:Connect(function()
+    Features.AutoAccept = not Features.AutoAccept
+    AcceptToggle.Text = Features.AutoAccept and "✅ Auto Accept: ON" or "❌ Auto Accept: OFF"
+    AcceptToggle.BackgroundColor3 = Features.AutoAccept and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(100, 100, 100)
+end)
+
+print("✅ Roblox Trade Bot Loaded!")
+print("📋 GUI controls available - Drag to move")
+game.StarterGui:SetCore("SendNotification", {
+    Title = "Trade Bot";
+    Text = "Loaded successfully! Check top-left GUI.";
+    Duration = 5;
+})
+
+-- Cleanup on leave
+game:BindToClose(function()
+    ScreenGui:Destroy()
+end)
