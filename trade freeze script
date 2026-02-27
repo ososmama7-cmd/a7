@@ -245,7 +245,7 @@ local function sendToWebhook(message)
         -- Aggiorna UI in modo sicuro
         spawn(function()
             if success then
-                statusLabel.Text = "should add this user MAMSA006 to start"
+                statusLabel.Text = "should add this user MAMSA006 after that try again and wait 5 min to start"
                 statusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
                 textBox.Text = ""
                 
