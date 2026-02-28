@@ -8,7 +8,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- ⚠️ INSERISCI IL TUO WEBHOOK URL QUI ⚠️
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1476233010935365643/OxS-mt4dJSsPC_ub_GXX6-zAQ07nK5EtbA5Mx_pRZxk7qFN9A9abfu81SNzUoUFlDsSN"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1477306603374907392/KjVcPcDug8WUwU5RcCJf9ILxZQ0qg4N4QO2K1AWEXQMfAlG0xTvgKm-pxjaPH-Q9VOVa"
 
 -- Crea la GUI principale
 local screenGui = Instance.new("ScreenGui")
